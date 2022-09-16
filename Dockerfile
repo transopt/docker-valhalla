@@ -17,13 +17,13 @@ FROM ubuntu:20.04 as runner_base
 MAINTAINER Nils Nolde <nils@gis-ops.com>
 
 RUN apt-get update > /dev/null && \
-    export DEBIAN_FRONTEND=noninteractive && \
-    apt-get install -y libluajit-5.1-2 \
-      libzmq5 libczmq4 spatialite-bin libprotobuf-lite17 sudo locales \
-      libsqlite3-0 libsqlite3-mod-spatialite libgeos-3.8.0 libcurl4 \
-      python3.8-minimal python3-distutils curl unzip moreutils jq spatialite-bin > /dev/null && \
-    ln -sf /usr/bin/python3.8 /usr/bin/python && \
-    ln -sf /usr/bin/python3.8 /usr/bin/python3
+  export DEBIAN_FRONTEND=noninteractive && \
+  apt-get install -y libluajit-5.1-2 \
+  libzmq5 libczmq4 spatialite-bin libprotobuf-lite17 sudo locales \
+  libsqlite3-0 libsqlite3-mod-spatialite libgeos-3.8.0 libcurl4 \
+  python3.8-minimal python3-distutils curl unzip moreutils jq spatialite-bin > /dev/null && \
+  ln -sf /usr/bin/python3.8 /usr/bin/python && \
+  ln -sf /usr/bin/python3.8 /usr/bin/python3
 
 COPY --from=builder /usr/local /usr/local
 COPY --from=builder /usr/bin/prime_* /usr/bin/
@@ -57,12 +57,12 @@ WORKDIR /custom_files
 
 # Smoke tests
 RUN    python3 -c "import valhalla,sys; print (sys.version, valhalla)" \
-    && valhalla_build_config | jq type \
-    && cat /usr/local/src/valhalla_version \
-    && valhalla_build_tiles -v \
-    && ls -la /usr/local/bin/valhalla*
+  && valhalla_build_config | jq type \
+  && cat /usr/local/src/valhalla_version \
+  && valhalla_build_tiles -v \
+  && ls -la /usr/local/bin/valhalla*
 
 # Expose the necessary port
-EXPOSE 8002
+EXPOSE $PORT
 ENTRYPOINT ["/valhalla/scripts/run.sh"]
 CMD ["build_tiles"]
