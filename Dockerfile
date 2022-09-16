@@ -63,6 +63,6 @@ RUN    python3 -c "import valhalla,sys; print (sys.version, valhalla)" \
   && ls -la /usr/local/bin/valhalla*
 
 # Expose the necessary port
-EXPOSE $PORT
+EXPOSE 8080
 ENTRYPOINT ["/valhalla/scripts/run.sh"]
 CMD ["build_tiles"]
