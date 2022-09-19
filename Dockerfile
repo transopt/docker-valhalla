@@ -54,7 +54,7 @@ COPY scripts/. /valhalla/scripts
 USER valhalla
 
 WORKDIR /custom_files
-COPY ./custom_files/file_hashes.txt ./custom_files/valhalla_tiles.tar ./
+COPY ./custom_files/greece/file_hashes.txt ./custom_files/greece/valhalla_tiles.tar ./
 
 # Smoke tests
 RUN    python3 -c "import valhalla,sys; print (sys.version, valhalla)" \
