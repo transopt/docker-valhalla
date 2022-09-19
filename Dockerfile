@@ -54,6 +54,7 @@ COPY scripts/. /valhalla/scripts
 USER valhalla
 
 WORKDIR /custom_files
+COPY ./custom_files/file_hashes.txt ./custom_files/valhalla_tiles.tar ./
 
 # Smoke tests
 RUN    python3 -c "import valhalla,sys; print (sys.version, valhalla)" \
@@ -65,4 +66,5 @@ RUN    python3 -c "import valhalla,sys; print (sys.version, valhalla)" \
 # Expose the necessary port
 EXPOSE 8080
 ENTRYPOINT ["/valhalla/scripts/run.sh"]
+
 CMD ["build_tiles"]

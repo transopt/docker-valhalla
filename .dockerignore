@@ -2,5 +2,5 @@ test/custom_files
 .git
 README.md
 **/*.pbf
-**/*.tar
+# **/*.tar
 **/*.sqlite
