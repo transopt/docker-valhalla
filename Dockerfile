@@ -4,7 +4,6 @@
 # with the previous runner's artifacts
 
 FROM valhalla/valhalla:run-latest as builder
-MAINTAINER Nils Nolde <nils@gis-ops.com>
 
 # remove some stuff from the original image
 RUN cd /usr/local/bin && \
@@ -14,13 +13,12 @@ RUN cd /usr/local/bin && \
   cd .. && mv $preserve ./bin
 
 FROM ubuntu:22.04 as runner_base
-MAINTAINER Nils Nolde <nils@gis-ops.com>
 
 RUN apt-get update > /dev/null && \
   export DEBIAN_FRONTEND=noninteractive && \
   apt-get install -y libluajit-5.1-2 \
   libzmq5 libczmq4 spatialite-bin libprotobuf-lite23 sudo locales \
-  libsqlite3-0 libsqlite3-mod-spatialite libcurl4 \
+  libsqlite3-0 libsqlite3-mod-spatialite libcurl4 wget \
   python3.10-minimal python3-distutils curl unzip moreutils jq spatialite-bin python-is-python3 > /dev/null
 
 COPY --from=builder /usr/local /usr/local
@@ -49,8 +47,22 @@ COPY scripts/. /valhalla/scripts
 
 USER valhalla
 
+RUN wget -O custom_files/greece-latest.osm.pbf https://download.geofabrik.de/europe/cyprus-latest.osm.pbf
+
 WORKDIR /custom_files
+
+# User provided config
 COPY ./valhalla.json ./
+
+# From official docs https://valhalla.github.io/valhalla/building/
+RUN mkdir -p valhalla_tiles
+# RUN valhalla_build_config --mjolnir-tile-dir /valhalla_tiles --mjolnir-tile-extract /valhalla_tiles.tar --mjolnir-timezone /valhalla_tiles/timezones.sqlite --mjolnir-admin /valhalla_tiles/admins.sqlite > valhalla.json
+# build timezones.sqlite to support time-dependent routing
+RUN valhalla_build_timezones > valhalla_tiles/timezones.sqlite
+# build routing tiles
+RUN valhalla_build_tiles -c valhalla.json greece-latest.osm.pbf
+# tar it up for running the server
+RUN valhalla_build_extract -c valhalla.json -v
 
 # Smoke tests
 RUN python -c "import valhalla,sys; print (sys.version, valhalla)" \
