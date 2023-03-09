@@ -47,7 +47,8 @@ COPY scripts/. /valhalla/scripts
 
 USER valhalla
 
-RUN wget -O custom_files/greece-latest.osm.pbf https://download.geofabrik.de/europe/cyprus-latest.osm.pbf
+# Be careful to change the country here and in build_tiles line
+RUN wget -O custom_files/greece-latest.osm.pbf https://download.geofabrik.de/europe/greece-latest.osm.pbf
 
 WORKDIR /custom_files
 
