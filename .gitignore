@@ -1,6 +1,5 @@
 docker-compose.yml
 custom_files/
-!custom_files/valhalla.json
 *.pbf
 !tests/*.pbf
 *.tar
