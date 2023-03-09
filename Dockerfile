@@ -50,6 +50,7 @@ COPY scripts/. /valhalla/scripts
 USER valhalla
 
 WORKDIR /custom_files
+COPY ./custom_files/valhalla.json ./
 
 # Smoke tests
 RUN python -c "import valhalla,sys; print (sys.version, valhalla)" \
