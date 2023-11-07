@@ -210,7 +210,7 @@
     },
     "motorcycle": {
       "max_distance": 500000.0,
-      "max_locations": 50,
+      "max_locations": 100,
       "max_matrix_distance": 200000.0,
       "max_matrix_location_pairs": 2500
     },

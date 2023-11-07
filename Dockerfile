@@ -1,9 +1,9 @@
 # Take the official valhalla runner image,
 # remove a few superfluous things and
-# create a new runner image from ubuntu:22.04
+# create a new runner image from ubuntu:20.04
 # with the previous runner's artifacts
-ARG VALHALLA_BUILDER_IMAGE=ghcr.io/valhalla/valhalla:latest
-FROM $VALHALLA_BUILDER_IMAGE as builder
+
+FROM ghcr.io/valhalla/valhalla:3.4.0 as builder
 MAINTAINER Nils Nolde <nils@gis-ops.com>
 
 # remove some stuff from the original image
@@ -14,6 +14,7 @@ RUN cd /usr/local/bin && \
   cd .. && mv $preserve ./bin
 
 FROM ubuntu:22.04 as runner_base
+MAINTAINER Nils Nolde <nils@gis-ops.com>
 
 RUN apt-get update > /dev/null && \
   export DEBIAN_FRONTEND=noninteractive && \
@@ -36,8 +37,8 @@ ENV serve_tiles=True
 # based on https://jtreminio.com/blog/running-docker-containers-as-current-host-user/, but this use case needed a more customized approach
 
 # with that we can properly test if the default was used or not
-ARG VALHALLA_UID=1000
-ARG VALHALLA_GID=1000
+ARG VALHALLA_UID=59999
+ARG VALHALLA_GID=59999
 
 RUN groupadd -g ${VALHALLA_GID} valhalla && \
   useradd -lmu ${VALHALLA_UID} -g valhalla valhalla && \
@@ -46,25 +47,26 @@ RUN groupadd -g ${VALHALLA_GID} valhalla && \
 
 COPY scripts/. /valhalla/scripts
 
-USER valhalla
-
-# Be careful to change the country here and in build_tiles line
-RUN wget -O custom_files/greece-latest.osm.pbf https://download.geofabrik.de/europe/greece-latest.osm.pbf
-
+# all lowercase
+ARG COUNTRY=greece
 WORKDIR /custom_files
-
 # User provided config
 COPY ./valhalla.json ./
+# Run wget before changing user
+RUN wget http://download.geofabrik.de/europe/${COUNTRY}-latest.osm.pbf
 
+# We build the tiles inside the image
 # From official docs https://valhalla.github.io/valhalla/building/
 RUN mkdir -p valhalla_tiles
 # RUN valhalla_build_config --mjolnir-tile-dir /valhalla_tiles --mjolnir-tile-extract /valhalla_tiles.tar --mjolnir-timezone /valhalla_tiles/timezones.sqlite --mjolnir-admin /valhalla_tiles/admins.sqlite > valhalla.json
 # build timezones.sqlite to support time-dependent routing
 RUN valhalla_build_timezones > valhalla_tiles/timezones.sqlite
 # build routing tiles
-RUN valhalla_build_tiles -c valhalla.json greece-latest.osm.pbf
+RUN valhalla_build_tiles -c valhalla.json ${COUNTRY}-latest.osm.pbf
 # tar it up for running the server
 RUN valhalla_build_extract -c valhalla.json -v
+
+USER valhalla
 
 # Smoke tests
 RUN python -c "import valhalla,sys; print (sys.version, valhalla)" \
@@ -79,5 +81,4 @@ ENV LD_LIBRARY_PATH /usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-g
 # Expose the necessary port
 EXPOSE 8002
 ENTRYPOINT ["/valhalla/scripts/run.sh"]
-
 CMD ["build_tiles"]
