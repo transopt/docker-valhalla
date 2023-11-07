@@ -10,15 +10,19 @@ run_cmd() {
   if [[ $(id --user) == "59999" ]] && [[ $(id --group) == "59999" ]]; then
     # -E preserves the env vars, but some are still nulled for security reasons
     # use "env" to preserve them
-    sudo -E env LD_LIBRARY_PATH=$LD_LIBRARY_PATH $1 || exit 1
+    $cmd_prefix sudo -E env LD_LIBRARY_PATH=$LD_LIBRARY_PATH $1 || exit 1
   else
-    $1 || exit 1
+    $cmd_prefix $1 || exit 1
   fi
 }
 
 do_build_tar() {
   if ([[ ${build_tar} == "True" && ! -f $TILE_TAR ]]) || [[ ${build_tar} == "Force" ]]; then
-    run_cmd "valhalla_build_extract -c ${CONFIG_FILE} -v"
+    options="-c ${CONFIG_FILE} -v"
+    if ! [[ -z ${traffic_name} ]]; then
+      options="${options} -t"
+    fi
+    run_cmd "valhalla_build_extract ${options}"
   fi
 }
 
@@ -36,8 +40,9 @@ echo ""
 
 # the env vars with True default are set in the dockerfile, others are evaluated in configure_valhalla.sh
 if [[ -z $server_threads ]]; then
-  server_threads=$(nproc)
+  export server_threads=$(nproc)
 fi
+
 if [[ -z $build_tar ]]; then
   build_tar="True"
 fi
@@ -70,7 +75,7 @@ if [[ $1 == "build_tiles" ]]; then
   if [[ ${serve_tiles} == "True" ]]; then
     if test -f ${CONFIG_FILE}; then
       echo "INFO: Found config file. Starting valhalla service!"
-      run_cmd "valhalla_service ${CONFIG_FILE} ${server_threads}"
+      cmd_prefix=exec run_cmd "valhalla_service ${CONFIG_FILE} ${server_threads}"
     else
       echo "WARNING: No config found!"
     fi

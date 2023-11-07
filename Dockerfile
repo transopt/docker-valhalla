@@ -1,13 +1,14 @@
 # Take the official valhalla runner image,
 # remove a few superfluous things and
-# create a new runner image from ubuntu:20.04
+# create a new runner image from ubuntu:22.04
 # with the previous runner's artifacts
-
-FROM valhalla/valhalla:run-latest as builder
+ARG VALHALLA_BUILDER_IMAGE=ghcr.io/valhalla/valhalla:latest
+FROM $VALHALLA_BUILDER_IMAGE as builder
+MAINTAINER Nils Nolde <nils@gis-ops.com>
 
 # remove some stuff from the original image
 RUN cd /usr/local/bin && \
-  preserve="valhalla_service valhalla_build_tiles valhalla_build_config valhalla_build_admins valhalla_build_timezones valhalla_build_elevation valhalla_ways_to_edges valhalla_build_extract valhalla_export_edges valhalla_add_predicted_traffic" && \
+  preserve="valhalla_service valhalla_build_tiles valhalla_build_config valhalla_build_admins valhalla_build_timezones valhalla_build_elevation valhalla_ways_to_edges valhalla_build_extract valhalla_export_edges valhalla_add_predicted_traffic valhalla_ingest_transit valhalla_convert_transit" && \
   mv $preserve .. && \
   for f in valhalla*; do rm $f; done && \
   cd .. && mv $preserve ./bin
